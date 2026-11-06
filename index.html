@@ -1,0 +1,777 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Cita con vuelta: ir al especialista a otra isla y volver a casa el mismo día. Prototipo de Simon Bodenhagen (ULL).">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>Cita con vuelta</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Tres páginas por hash: #problema, #propuesta, #demo. Sin JS se ven las tres seguidas. */
+:root {
+  --page: #f7f5f0; --surface: #ffffff; --ink: #1d2329; --muted: #585f66;
+  --line: #e3ded3; --line-strong: #8a8f93;
+  --accent: #0b5c7a; --on-accent: #ffffff; --accent-hover: #084a63; --accent-tint: #e3eef2;
+  --ok: #2f7d4f; --ok-ink: #24663f; --ok-tint: #e4f0e8;
+  --no-ink: #a5321f; --no-block: #b83a26; --on-no: #ffffff; --no-tint: #f9e6e0;
+  --neutral-ink: #3f4850; --neutral-tint: #ece9e2; --focus: #1d2329;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --page: #12171b; --surface: #1b2227; --ink: #e8e6e1; --muted: #a9b1b6;
+  --line: #2f383e; --line-strong: #737d83;
+  --accent: #7fc0d8; --on-accent: #0a1a20; --accent-hover: #a0d2e4; --accent-tint: #163543;
+  --ok: #6fc28f; --ok-ink: #8fd3a8; --ok-tint: #17301f;
+  --no-ink: #f39a87; --no-block: #9a3626; --on-no: #ffffff; --no-tint: #3a1e18;
+  --neutral-ink: #cdd2d4; --neutral-tint: #262e33; --focus: #e8e6e1;
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --page: #12171b; --surface: #1b2227; --ink: #e8e6e1; --muted: #a9b1b6;
+  --line: #2f383e; --line-strong: #737d83;
+  --accent: #7fc0d8; --on-accent: #0a1a20; --accent-hover: #a0d2e4; --accent-tint: #163543;
+  --ok: #6fc28f; --ok-ink: #8fd3a8; --ok-tint: #17301f;
+  --no-ink: #f39a87; --no-block: #9a3626; --on-no: #ffffff; --no-tint: #3a1e18;
+  --neutral-ink: #cdd2d4; --neutral-tint: #262e33; --focus: #e8e6e1;
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  margin: 0; background: var(--page); color: var(--ink);
+  font-family: "Source Sans 3", "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+  font-size: 17px; line-height: 26px; -webkit-text-size-adjust: 100%;
+}
+h1, h2, h3, p, ol, ul, dl, dd, figure { margin: 0; }
+ol, ul { padding: 0; list-style: none; }
+.num, .vt-t, .slot-t, .fig-v, .tm, .sum, .conn-line b, .ref, .big-n { font-variant-numeric: tabular-nums; }
+a { color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+a:hover { color: var(--accent-hover); text-decoration-thickness: 3px; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+[tabindex="-1"]:focus { outline: none; }
+.sr { position: absolute !important; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+.ic { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.75; stroke-linecap: round; stroke-linejoin: round; vertical-align: middle; }
+.flip { transform: scaleX(-1); }
+.muted { color: var(--muted); }
+.small { font-size: 14px; line-height: 20px; }
+.prose { max-width: 680px; }
+.mt1 { margin-top: 4px; } .mt2 { margin-top: 8px; } .mt3 { margin-top: 16px; } .mt4 { margin-top: 24px; }
+
+.wrap {
+  max-width: 1100px; margin-inline: auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* Kopf mit Schrittanzeige */
+.site-head { background: var(--surface); border-bottom: 1px solid var(--line); }
+.site-head .wrap { display: flex; flex-wrap: wrap; align-items: center; column-gap: 32px; }
+.brand { display: flex; align-items: center; gap: 8px; padding-block: 16px 0; }
+.brand a { font-size: 19px; line-height: 28px; font-weight: 700; color: var(--ink); text-decoration: none; }
+.brand a:hover { text-decoration: underline; text-decoration-thickness: 1px; }
+.site-nav { flex-basis: 100%; }
+.site-nav ul { display: flex; gap: 16px; }
+.site-nav a { display: flex; align-items: center; gap: 8px; min-height: 48px; font-size: 16px; line-height: 24px; color: var(--ink); text-decoration: none; }
+.site-nav a:hover .nl { text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.nn { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--line-strong); font-size: 14px; line-height: 1; font-weight: 700; flex: none; }
+.site-nav a[aria-current="page"] { font-weight: 600; }
+.site-nav a[aria-current="page"] .nn { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+@media (max-width: 639px) {
+  /* Mobil: nur der aktive Schritt mit Namen, die anderen als Ziffer (Name bleibt für Screenreader). */
+  .site-nav a:not([aria-current="page"]) .nl { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+}
+
+/* Tags */
+.tag { display: inline-block; font-size: 14px; line-height: 20px; font-weight: 600; padding: 2px 8px; border-radius: 2px; }
+.tag-ok { color: var(--ok-ink); background: var(--ok-tint); }
+.tag-neutral { color: var(--neutral-ink); background: var(--neutral-tint); }
+.chip { display: inline-block; border: 1px solid var(--ink); border-radius: 2px; font-size: 14px; line-height: 20px; font-weight: 600; padding: 0 8px; }
+
+/* Typo */
+.page { padding-block: 32px 64px; }
+h1 { font-size: 34px; line-height: 40px; font-weight: 700; letter-spacing: -0.5px; max-width: 24ch; text-wrap: balance; }
+.lead { font-size: 19px; line-height: 28px; margin-top: 16px; max-width: 680px; text-wrap: pretty; }
+.byline { margin-top: 16px; font-size: 14px; line-height: 20px; color: var(--muted); }
+h2 { font-size: 22px; line-height: 28px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+h3 { font-size: 17px; line-height: 26px; font-weight: 600; }
+.blk { margin-top: 48px; }
+.step { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent-tint); color: var(--accent); font-size: 16px; line-height: 1; font-weight: 700; flex: none; }
+
+/* Senkrechter Plan (mobil, und Quelle für Screenreader) */
+.vt { --vt-bg: var(--page); font-size: 16px; line-height: 24px; }
+.vt-day { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--muted); padding-block: 8px; }
+.vt-row { display: grid; grid-template-columns: 48px 24px minmax(0, 1fr); column-gap: 8px; }
+.vt-t { text-align: right; font-weight: 700; }
+.vt-rail { position: relative; }
+.vt-rail::before { content: ""; position: absolute; left: 11px; width: 2px; top: 12px; bottom: -12px; background: var(--line-strong); }
+.is-wait .vt-rail::before { background: repeating-linear-gradient(to bottom, var(--line-strong) 0 4px, transparent 4px 8px); }
+.is-last .vt-rail::before { display: none; }
+.vt-rail::after { content: ""; position: absolute; left: 7px; top: 7px; width: 10px; height: 10px; border-radius: 50%; background: var(--vt-bg); border: 2px solid var(--line-strong); }
+.is-fly .vt-rail::after { background: var(--accent); border-color: var(--accent); }
+.is-cita .vt-rail::after { background: var(--ink); border-color: var(--ink); }
+.is-end .vt-rail::after { border-color: var(--ink); }
+.vt-c { display: flex; gap: 8px; align-items: flex-start; padding-bottom: 16px; min-width: 0; }
+.vt-c .ic { margin-top: 2px; color: var(--muted); }
+.is-wait .vt-c { color: var(--muted); }
+.vt-night { display: flex; align-items: center; gap: 8px; background: var(--no-block); color: var(--on-no); padding: 8px 16px; margin-block: 8px 16px; border-radius: 4px; font-weight: 600; }
+
+/* Seite 1: Vergleich */
+.scen + .scen { margin-top: 32px; }
+.sc-p { margin-top: 4px; max-width: 680px; }
+.tl-row { margin-top: 16px; }
+.lane { display: none; }
+.tl-cost { margin-top: 8px; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 16px; }
+.tl-cost .k { font-size: 16px; line-height: 24px; color: var(--muted); flex-basis: 100%; }
+.sum { font-size: 32px; line-height: 40px; font-weight: 700; }
+.sum.no { color: var(--no-ink); }
+.sum.ok { color: var(--ok-ink); }
+.legend { display: none; }
+.result { margin-top: 32px; border-top: 2px solid var(--ink); padding-top: 24px; }
+.result-big { font-size: 28px; line-height: 34px; font-weight: 600; max-width: 22ch; text-wrap: balance; }
+.result-big .num { font-weight: 700; color: var(--ok-ink); }
+.fly { background: var(--accent); color: var(--on-accent); }
+.cita { background: var(--ink); color: var(--surface); }
+.wait { border: 1px solid var(--line-strong); background: repeating-linear-gradient(135deg, var(--line-strong) 0 2px, transparent 2px 7px); }
+.night { background: var(--no-block); color: var(--on-no); }
+.sw { display: inline-block; width: 24px; height: 12px; border-radius: 2px; }
+
+@media (min-width: 640px) {
+  .vt-src { position: absolute !important; width: 1px; height: 1px; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+  .lane { display: grid; grid-template-columns: minmax(0, 4fr) 24px minmax(0, 12fr); }
+  .part { position: relative; height: 100px; --o: 360; --r: 720; }
+  .part-lun { --o: 0; --r: 100; }
+  .day { position: absolute; left: 0; top: 0; font-size: 14px; line-height: 20px; font-weight: 600; color: var(--muted); white-space: nowrap; }
+  .cut { position: relative; }
+  .cut::before { content: ""; position: absolute; top: 61px; left: 3px; right: 3px; border-top: 2px dashed var(--line-strong); }
+  .seg { position: absolute; top: 48px; height: 28px; border-radius: 4px; display: flex; align-items: center; gap: 4px; padding-inline: 8px; overflow: hidden; white-space: nowrap; font-size: 14px; line-height: 20px; font-weight: 600;
+    left: calc((var(--s) - var(--o)) / var(--r) * 100%); width: calc((var(--e) - var(--s)) / var(--r) * 100% - 2px); }
+  .seg .ic { width: 16px; height: 16px; }
+  .seg.to-r { border-top-right-radius: 0; border-bottom-right-radius: 0; width: calc((var(--e) - var(--s)) / var(--r) * 100%); }
+  .seg.from-l { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+  .lbl, .tm, .endm, .home { position: absolute; font-size: 14px; line-height: 20px; white-space: nowrap; left: calc((var(--s) - var(--o)) / var(--r) * 100%); }
+  .lbl { top: 24px; font-weight: 600; }
+  .tm { top: 80px; color: var(--muted); }
+  .endm { top: 52px; left: calc((var(--e) - var(--o)) / var(--r) * 100% + 8px); font-weight: 600; }
+  .home { top: 52px; left: 0; color: var(--muted); }
+  .tl-cost { margin-top: 0; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-top: 24px; font-size: 14px; line-height: 20px; color: var(--muted); }
+  .legend li { display: flex; align-items: center; gap: 8px; }
+  .result-big { font-size: 40px; line-height: 46px; }
+}
+@media (min-width: 1000px) {
+  .tl-row { display: grid; grid-template-columns: minmax(0, 1fr) 200px; column-gap: 32px; align-items: center; }
+  .tl-cost { display: block; padding-top: 24px; }
+  .legend { max-width: calc(100% - 232px); }
+}
+
+.facts { display: grid; gap: 24px; margin-top: 24px; }
+.big-n { display: block; font-size: 40px; line-height: 44px; font-weight: 700; }
+.fact p { margin-top: 4px; font-size: 16px; line-height: 24px; color: var(--muted); max-width: 30ch; }
+.src { margin-top: 16px; font-size: 14px; line-height: 20px; color: var(--muted); }
+
+details { margin-top: 24px; }
+summary { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 16px; line-height: 24px; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; padding-block: 12px; list-style: none; }
+summary::-webkit-details-marker { display: none; }
+summary:hover { text-decoration-thickness: 3px; }
+summary .ic { transition: transform .15s; }
+details[open] > summary .ic { transform: rotate(90deg); }
+.det-body { border-left: 4px solid var(--line); padding: 8px 16px; font-size: 16px; line-height: 24px; max-width: 680px; }
+.det-body > * + * { margin-top: 8px; }
+.det-body ul { list-style: disc; padding-left: 24px; }
+
+/* Seite 2 */
+.flow { display: grid; gap: 8px; margin-top: 32px; counter-reset: f; }
+.flow li { display: flex; align-items: center; gap: 12px; font-size: 17px; line-height: 24px; font-weight: 600; }
+.duo { display: grid; gap: 16px; margin-top: 24px; align-items: start; }
+.box { border-radius: 4px; padding: 24px 16px; }
+.box-demo { border: 1px dashed var(--line-strong); }
+.box-full { background: var(--accent-tint); border-top: 4px solid var(--accent); }
+.box h3 { font-size: 19px; line-height: 28px; }
+.box > p { margin-top: 4px; color: var(--muted); }
+.box-full > p { color: var(--ink); }
+.dots { margin-top: 16px; }
+.dots li { position: relative; padding: 8px 0 8px 24px; border-top: 1px solid var(--line); font-size: 16px; line-height: 24px; }
+.dots li::before { content: ""; position: absolute; left: 0; top: 15px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--line-strong); }
+.feats { display: grid; gap: 16px; margin-top: 16px; }
+.feat { display: grid; grid-template-columns: 24px minmax(0, 1fr); column-gap: 12px; }
+.feat .ic { color: var(--accent); width: 24px; height: 24px; margin-top: 2px; }
+.feat h4 { margin: 0; font-size: 17px; line-height: 26px; font-weight: 600; }
+.feat p { font-size: 16px; line-height: 24px; }
+.pilot { margin-top: 48px; border-left: 4px solid var(--ok); padding: 8px 0 8px 16px; max-width: 680px; }
+.pilot h2 { display: block; }
+.pilot p { margin-top: 8px; }
+@media (min-width: 640px) {
+  .flow { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .flow li { flex-direction: column; align-items: flex-start; position: relative; }
+  .flow li:not(:last-child)::after { content: ""; position: absolute; top: 14px; left: 40px; right: -8px; height: 1px; background: var(--line-strong); }
+  .box { padding: 24px; }
+  .feats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+}
+@media (min-width: 900px) { .duo { grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 24px; } }
+
+/* Seite 3 */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 16px; min-width: 0; }
+.demo { display: grid; gap: 32px; align-items: start; margin-top: 32px; }
+.demo-side { min-width: 0; }
+.modes { display: flex; gap: 24px; border-bottom: 1px solid var(--line); margin-top: 16px; }
+.modes button { position: relative; font: inherit; font-size: 16px; line-height: 24px; color: var(--ink); background: none; border: 0; padding: 12px 0; cursor: pointer; }
+.modes button[aria-pressed="true"] { font-weight: 600; }
+.modes button[aria-pressed="true"]::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 4px; background: var(--accent); }
+.key { display: flex; flex-wrap: wrap; gap: 4px 24px; margin-top: 16px; font-size: 14px; line-height: 20px; color: var(--muted); }
+.key span { display: inline-flex; align-items: center; gap: 8px; }
+.col-h { font-size: 14px; line-height: 20px; font-weight: 600; color: var(--muted); margin-top: 16px; }
+.slots ul { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
+.slot { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; min-height: 48px; padding: 8px 4px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; }
+.slot-t { font-size: 17px; line-height: 24px; font-weight: 700; }
+.dot { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+.is-ok .dot, .dot.ok { background: var(--ok); }
+.is-off .dot, .dot.off { border: 2px solid var(--line-strong); }
+.is-free .dot { display: none; }
+.slot:not(.is-off):hover { background: var(--accent-tint); border-color: var(--accent); }
+.slot.is-off { cursor: default; background: transparent; border-style: dashed; }
+.slot.is-off .slot-t { color: var(--muted); font-weight: 400; text-decoration: line-through; }
+.slot[aria-pressed="true"] { background: var(--accent-tint); border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.why { margin-top: 16px; border-left: 4px solid var(--accent); padding: 8px 16px; font-size: 16px; line-height: 24px; min-height: 64px; }
+
+.sms { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; scroll-margin-top: 16px; }
+.sms-head { display: flex; justify-content: space-between; gap: 16px; font-size: 14px; line-height: 20px; color: var(--muted); border-bottom: 1px solid var(--line); padding: 12px 16px; }
+.sms-body { padding: 16px; font-size: 16px; line-height: 24px; }
+.bubble { background: var(--neutral-tint); border-radius: 12px 12px 12px 4px; padding: 12px 16px; }
+.bubble > * + * { margin-top: 12px; }
+.pl { display: grid; gap: 8px; }
+.pl-row { display: grid; grid-template-columns: 44px 20px minmax(0, 1fr); column-gap: 8px; align-items: start; }
+.pl-row b { font-weight: 700; }
+.pl-row .ic { margin-top: 2px; color: var(--muted); }
+.pl-sub { padding-left: 72px; font-size: 14px; line-height: 20px; color: var(--muted); }
+.sms-actions { display: grid; gap: 4px; margin-top: 16px; }
+.btn { font: inherit; font-size: 19px; line-height: 24px; font-weight: 600; min-height: 48px; padding: 12px 16px; border: 0; border-radius: 4px; background: var(--accent); color: var(--on-accent); cursor: pointer; width: 100%; }
+.btn:hover { background: var(--accent-hover); }
+.btn:active { transform: translateY(1px); }
+.linkbtn { justify-self: center; font: inherit; font-size: 16px; line-height: 24px; color: var(--accent); background: none; border: 0; padding: 12px 8px; cursor: pointer; text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 3px; }
+.linkbtn:hover { color: var(--accent-hover); text-decoration-thickness: 3px; }
+.done { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; margin-top: 16px; border-radius: 4px; background: var(--ok-tint); color: var(--ok-ink); font-weight: 600; }
+
+.order { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 4px; padding: 16px; }
+.order-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.order-head h3 { font-size: 19px; line-height: 28px; }
+.ref { margin-top: 4px; font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 19px; line-height: 28px; font-weight: 700; overflow-wrap: anywhere; }
+.conns { display: grid; gap: 16px; margin-top: 16px; padding-block: 16px; border-block: 1px solid var(--line); }
+.conn-top { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 16px; line-height: 24px; }
+.conn-line { display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 16px; line-height: 24px; }
+.conn-rail { position: relative; flex: 1; min-width: 32px; height: 2px; background: var(--ink); }
+.conn-rail::before, .conn-rail::after { content: ""; position: absolute; top: -4px; width: 10px; height: 10px; border-radius: 50%; background: var(--ink); }
+.conn-rail::before { left: 0; } .conn-rail::after { right: 0; }
+.kv > div { display: grid; gap: 0 16px; padding-block: 8px; border-bottom: 1px solid var(--line); font-size: 16px; line-height: 24px; }
+.kv > div:last-child { border-bottom: 0; }
+.kv dt { font-weight: 600; }
+.kv dd { min-width: 0; }
+.order details { margin-top: 8px; }
+.order details .kv { margin-top: 0; }
+
+.figs { display: grid; gap: 16px; margin-top: 16px; }
+.fig-k { font-size: 16px; line-height: 24px; color: var(--muted); }
+.fig-v { font-size: 40px; line-height: 44px; font-weight: 700; white-space: nowrap; }
+.fig-v.ok { color: var(--ok-ink); }
+.payback { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line); }
+
+/* Weiterblättern */
+.pager { display: flex; flex-direction: column; align-items: stretch; gap: 16px; margin-top: 64px; padding-top: 24px; border-top: 1px solid var(--line); }
+.pg-prev, .pg-home { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; min-height: 48px; font-size: 16px; line-height: 24px; }
+.pg-next { display: inline-flex; align-items: center; justify-content: center; gap: 12px; min-height: 56px; padding: 12px 24px; border-radius: 4px; background: var(--accent); color: var(--on-accent); font-size: 17px; line-height: 24px; font-weight: 600; text-decoration: none; text-align: center; }
+.pg-next:hover { background: var(--accent-hover); color: var(--on-accent); }
+
+.foot { border-top: 1px solid var(--line); padding-block: 24px 48px; font-size: 14px; line-height: 20px; color: var(--muted); }
+.foot p + p { margin-top: 8px; }
+
+@media (min-width: 640px) {
+  body { font-size: 18px; line-height: 28px; }
+  .wrap { padding-left: max(32px, env(safe-area-inset-left, 0px)); padding-right: max(32px, env(safe-area-inset-right, 0px)); }
+  .site-head .wrap { height: 64px; flex-wrap: nowrap; justify-content: space-between; }
+  .brand { padding-block: 0; }
+  .site-nav { flex-basis: auto; }
+  .site-nav ul { gap: 24px; }
+  .page { padding-block: 48px 64px; }
+  h1 { font-size: 52px; line-height: 56px; letter-spacing: -1px; }
+  .lead { font-size: 22px; line-height: 32px; margin-top: 24px; }
+  h2 { font-size: 26px; line-height: 32px; }
+  h3 { font-size: 19px; line-height: 28px; }
+  .blk { margin-top: 64px; }
+  .card { padding: 24px; }
+  .slots ul { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .order { padding: 24px; }
+  .kv > div { grid-template-columns: 9.5rem minmax(0, 1fr); }
+  .figs { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; }
+  .facts { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 680px; }
+  .pager { flex-direction: row; justify-content: space-between; align-items: center; }
+  .pg-next { margin-left: auto; font-size: 19px; }
+}
+@media (min-width: 960px) {
+  .demo { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+  .agenda { position: sticky; top: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+  .btn:active { transform: none; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-bed" viewBox="0 0 24 24"><path d="M2 4v16M2 8h18a2 2 0 0 1 2 2v10M2 17h20M6 8v9"/></symbol>
+  <symbol id="i-plane" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></symbol>
+  <symbol id="i-hosp" viewBox="0 0 24 24"><path d="M12 6v4M10 8h4M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16M3 21h18M10 21v-4h4v4"/></symbol>
+  <symbol id="i-msg" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M7 3h7l5 5v13H7zM14 3v5h5M10 13h6M10 17h6"/></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><path d="M20 11a8 8 0 0 0-14.9-3M4 4v4h4M4 13a8 8 0 0 0 14.9 3M20 20v-4h-4"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 4v16h16M8 16v-5M12 16V8M16 16v-3"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5L20 7"/></symbol>
+</svg>
+
+<div lang="es">
+<header class="site-head">
+  <div class="wrap">
+    <p class="brand"><a href="#problema">Cita con vuelta</a><span class="tag tag-neutral">Prototipo</span></p>
+    <nav class="site-nav" aria-label="Páginas">
+      <ul>
+        <li><a href="#problema"><span class="nn" aria-hidden="true">1</span><span class="nl">Cita con vuelta</span></a></li>
+        <li><a href="#propuesta"><span class="nn" aria-hidden="true">2</span><span class="nl">Qué propongo construir</span></a></li>
+        <li><a href="#demo"><span class="nn" aria-hidden="true">3</span><span class="nl">Pruébalo</span></a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- ============ 1 · Cita con vuelta ============ -->
+<section id="p-problema" data-page class="page" aria-labelledby="t1">
+  <h1 id="t1" tabindex="-1">Ir al especialista a otra isla y volver a casa el mismo día.</h1>
+  <p class="lead">Si la cita es a primera hora, el paciente de otra isla tiene que volar la víspera y dormir fuera. El SCS paga la noche. Cita con vuelta solo ofrece horas con ida y vuelta en el día.</p>
+  <p class="byline">Prototipo de Simon Bodenhagen, estudiante de la Universidad de La Laguna (ULL). Reto Archipiélago 2026.</p>
+
+  <section class="blk" aria-labelledby="h-antonio">
+    <h2 id="h-antonio">Antonio, el mismo viaje dos veces</h2>
+    <p class="prose mt2">Antonio vive en Los Llanos de Aridane (La Palma). Tiene una revisión en el Hospital Universitario de Canarias. Viaja con su hija.</p>
+
+    <div class="mt4">
+      <div class="scen">
+        <h3>Hoy</h3>
+        <p class="sc-p">Si le dan cita a las 8:00, vuela la víspera y duerme con su hija en un hotel de Tenerife.</p>
+        <div class="tl-row">
+          <div class="lane" aria-hidden="true">
+            <div class="part part-lun">
+              <span class="day">Lunes 16/11</span>
+              <span class="lbl" style="--s:0">Vuelo</span><span class="seg fly" style="--s:0;--e:14"></span>
+              <span class="seg night to-r" style="--s:16;--e:100"><svg class="ic"><use href="#i-bed"/></svg>Noche en hotel</span>
+            </div>
+            <div class="cut"></div>
+            <div class="part">
+              <span class="day">Martes 17/11</span>
+              <span class="seg night from-l" style="--s:360;--e:480"></span>
+              <span class="seg cita" style="--s:480;--e:600">Cita</span><span class="tm" style="--s:480">08:00</span>
+              <span class="seg wait" style="--s:600;--e:900"></span>
+              <span class="lbl" style="--s:900">Vuelta</span><span class="seg fly" style="--s:900;--e:930"></span><span class="tm" style="--s:900">15:00</span>
+              <span class="endm" style="--e:930">En casa 15:30</span>
+            </div>
+          </div>
+          <ol class="vt vt-src">
+            <li class="vt-day">Lunes 16/11</li>
+            <li class="vt-row is-fly is-last"><span class="vt-t"></span><span class="vt-rail"></span><span class="vt-c"><svg class="ic" aria-hidden="true"><use href="#i-plane"/></svg><span>Vuelo a Tenerife Norte la víspera</span></span></li>
+            <li class="vt-night"><svg class="ic" aria-hidden="true"><use href="#i-bed"/></svg><span>Noche fuera de casa: 1 noche en hotel</span></li>
+            <li class="vt-day">Martes 17/11</li>
+            <li class="vt-row is-cita"><span class="vt-t">08:00</span><span class="vt-rail"></span><span class="vt-c"><svg class="ic" aria-hidden="true"><use href="#i-hosp"/></svg><span>Cita en el HUC</span></span></li>
+            <li class="vt-row is-wait"><span class="vt-t">10:00</span><span class="vt-rail"></span><span class="vt-c">Traslado y espera</span></li>
+            <li class="vt-row is-fly"><span class="vt-t">15:00</span><span class="vt-rail"></span><span class="vt-c"><svg class="ic" aria-hidden="true"><use href="#i-plane"/></svg><span>Vuelo NT650 Tenerife Norte → La Palma</span></span></li>
+            <li class="vt-row is-end is-last"><span class="vt-t">15:30</span><span class="vt-rail"></span><span class="vt-c">En La Palma</span></li>
+          </ol>
+          <div class="tl-cost">
+            <p class="k">Coste para el SCS</p>
+            <p class="sum no">291,88 €</p>
+            <p class="small muted">1 noche y 2 días fuera de casa</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="scen">
+        <h3>Con Cita con vuelta</h3>
+        <p class="sc-p">La agenda le ofrece las 10:30. Vuela el martes a las 8:00 y a las 15:30 está en casa.</p>
+        <div class="tl-row">
+          <div class="lane" aria-hidden="true">
+            <div class="part part-lun"><span class="day">Lunes 16/11</span><span class="home">En casa</span></div>
+            <div class="cut"></div>
+            <div class="part">
+              <span class="day">Martes 17/11</span>
+              <span class="lbl" style="--s:480">Ida</span><span class="seg fly" style="--s:480;--e:510"></span><span class="tm" style="--s:480">08:00</span>
+              <span class="seg wait" style="--s:510;--e:630"></span>
+              <span class="seg cita" style="--s:630;--e:750">Cita</span><span class="tm" style="--s:630">10:30</span>
+              <span class="seg wait" style="--s:750;--e:900"></span>
+              <span class="lbl" style="--s:900">Vuelta</span><span class="seg fly" style="--s:900;--e:930"></span><span class="tm" style="--s:900">15:00</span>
+              <span class="endm" style="--e:930">En casa 15:30</span>
+            </div>
+          </div>
+          <ol class="vt vt-src">
+            <li class="vt-day">Lunes 16/11</li>
+            <li class="vt-row is-end is-last"><span class="vt-t"></span><span class="vt-rail"></span><span class="vt-c">En casa</span></li>
+            <li class="vt-day">Martes 17/11</li>
+            <li class="vt-row is-fly"><span class="vt-t">08:00</span><span class="vt-rail"></span><span class="vt-c"><svg class="ic" aria-hidden="true"><use href="#i-plane"/></svg><span>Vuelo NT605 La Palma → Tenerife Norte</span></span></li>
+            <li class="vt-row is-wait"><span class="vt-t">08:30</span><span class="vt-rail"></span><span class="vt-c">Guagua 020 y tranvía al HUC</span></li>
+            <li class="vt-row is-cita"><span class="vt-t">10:30</span><span class="vt-rail"></span><span class="vt-c"><svg class="ic" aria-hidden="true"><use href="#i-hosp"/></svg><span>Cita en el HUC</span></span></li>
+            <li class="vt-row is-wait"><span class="vt-t">12:30</span><span class="vt-rail"></span><span class="vt-c">Traslado y espera</span></li>
+            <li class="vt-row is-fly"><span class="vt-t">15:00</span><span class="vt-rail"></span><span class="vt-c"><svg class="ic" aria-hidden="true"><use href="#i-plane"/></svg><span>Vuelo NT650 Tenerife Norte → La Palma</span></span></li>
+            <li class="vt-row is-end is-last"><span class="vt-t">15:30</span><span class="vt-rail"></span><span class="vt-c">En La Palma. Cena en casa.</span></li>
+          </ol>
+          <div class="tl-cost">
+            <p class="k">Coste para el SCS</p>
+            <p class="sum ok">0,00 €</p>
+            <p class="small muted">Ninguna noche fuera, 1 día</p>
+          </div>
+        </div>
+      </div>
+
+      <ul class="legend" aria-hidden="true">
+        <li><span class="sw fly"></span>Vuelo</li>
+        <li><span class="sw cita"></span>Cita</li>
+        <li><span class="sw wait"></span>Traslado y espera</li>
+        <li><span class="sw night"></span>Noche fuera de casa</li>
+      </ul>
+      <div class="result">
+        <p class="result-big">Una noche menos y <span class="num">291,88 €</span> menos por viaje.</p>
+        <p class="small muted mt2">Los billetes de avión cuestan lo mismo en los dos casos y no se incluyen.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="blk" aria-labelledby="h-solo">
+    <h2 id="h-solo">No es solo Antonio</h2>
+    <div class="facts">
+      <div class="fact"><span class="big-n">20.572</span><p>pacientes de islas no capitalinas viajaron al médico en 2023</p></div>
+      <div class="fact"><span class="big-n">54.691</span><p>traslados autorizados ese año</p></div>
+    </div>
+    <p class="src">Datos de la Secretaría General del SCS publicados por Atlántico Hoy el 07/10/2024 (<a href="https://www.atlanticohoy.com/sociedad/pacientes-islas-capitalinas-canarias_1537160_102.html" target="_blank" rel="noopener">atlanticohoy.com</a>).</p>
+    <details>
+      <summary><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg>Cómo se calculan los importes</summary>
+      <div class="det-body">
+        <p>El SCS compensa a paciente y acompañante, por persona y día, con 106,94 € de alojamiento y 39,00 € de manutención (compensaciones desde el 01/01/2026, Orden de 2 de julio de 2026, BOC n.º 140, <a href="https://www3.gobiernodecanarias.org/sanidad/scs/contenidoGenerico.jsp?idDocument=69bab29c-3a3e-11de-ac1c-2ff2cc426c4d&amp;idCarpeta=ae273cd1-b385-11e9-82f7-8d5cff9227e6" target="_blank" rel="noopener">gobiernodecanarias.org</a>).</p>
+        <p>Una noche fuera para dos personas: 2 × 106,94 € = <span class="num">213,88 €</span> de alojamiento y 2 × 39,00 € = <span class="num">78,00 €</span> de manutención. En total <span class="num">291,88 €</span>.</p>
+        <p>Si vuelve el mismo día, el cálculo supone que no hay alojamiento ni manutención.</p>
+      </div>
+    </details>
+  </section>
+
+  <nav class="pager" aria-label="Paso siguiente">
+    <a class="pg-next" href="#propuesta" rel="next">Siguiente: Qué propongo construir<svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+  </nav>
+</section>
+
+<!-- ============ 2 · Qué propongo construir ============ -->
+<section id="p-propuesta" data-page class="page" aria-labelledby="t2">
+  <h1 id="t2" tabindex="-1">Qué propongo construir</h1>
+  <p class="lead">Una regla en la agenda del hospital: a quien viene de otra isla solo se le ofrecen horas con vuelta el mismo día. La reserva llega sola a su agencia.</p>
+
+  <ol class="flow" aria-label="Cómo funciona">
+    <li><span class="step" aria-hidden="true">1</span>El hospital cita</li>
+    <li><span class="step" aria-hidden="true">2</span>El paciente recibe el plan</li>
+    <li><span class="step" aria-hidden="true">3</span>Un clic en «Confirmar»</li>
+    <li><span class="step" aria-hidden="true">4</span>Se mide</li>
+  </ol>
+
+  <section class="blk" aria-labelledby="h-vs">
+    <h2 id="h-vs">Esta página y el sistema completo</h2>
+    <div class="duo">
+      <div class="box box-demo">
+        <h3>Esta página</h3>
+        <p>Una demostración para entender la idea en un minuto.</p>
+        <ul class="dots">
+          <li>Vuelos reales de Binter La Palma ↔ Tenerife Norte del 17/11/2026.</li>
+          <li>Un SMS simulado.</li>
+          <li>Un paciente de ejemplo y una reserva simulada.</li>
+          <li>Sin cambios de billete.</li>
+          <li>Un contador de la demostración.</li>
+        </ul>
+      </div>
+      <div class="box box-full">
+        <h3>El sistema completo</h3>
+        <p>Un servicio real dentro del SCS.</p>
+        <div class="feats">
+          <div class="feat"><svg class="ic" aria-hidden="true"><use href="#i-plane"/></svg><div><h4>Vuelos y barcos</h4><p>Un motor que cruza en tiempo real la agenda de cada hospital con todos los vuelos y barcos de las cinco islas no capitalinas.</p></div></div>
+          <div class="feat"><svg class="ic" aria-hidden="true"><use href="#i-msg"/></svg><div><h4>Aviso al paciente</h4><p>Conectado al SMS de citas que el SCS ya usa en todos sus hospitales.</p></div></div>
+          <div class="feat"><svg class="ic" aria-hidden="true"><use href="#i-doc"/></svg><div><h4>Reserva</h4><p>Orden de reserva automática a la agencia que elige el paciente, que emite y verifica el descuento de residente.</p></div></div>
+          <div class="feat"><svg class="ic" aria-hidden="true"><use href="#i-swap"/></svg><div><h4>Cambios</h4><p>Cambio automático de billete si cambia la cita o se cancela un vuelo o un barco.</p></div></div>
+          <div class="feat"><svg class="ic" aria-hidden="true"><use href="#i-chart"/></svg><div><h4>Medición</h4><p>Un panel que mide las noches evitadas por isla y muestra qué conexiones faltan.</p></div></div>
+          <div class="feat"><svg class="ic" aria-hidden="true"><use href="#i-shield"/></svg><div><h4>Datos</h4><p>Datos tratados dentro del SCS, conforme al RGPD y al Esquema Nacional de Seguridad.</p></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="pilot" aria-labelledby="h-pilot">
+    <h2 id="h-pilot">Primer paso: un piloto La Palma → HUC</h2>
+    <p>Tres meses y menos de 15.000 €. Con 52 noches evitadas, el piloto se paga solo.</p>
+  </section>
+
+  <nav class="pager" aria-label="Pasos">
+    <a class="pg-prev" href="#problema" rel="prev"><svg class="ic flip" aria-hidden="true"><use href="#i-arrow"/></svg>Anterior: Cita con vuelta</a>
+    <a class="pg-next" href="#demo" rel="next">Siguiente: Pruébalo<svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+  </nav>
+</section>
+
+<!-- ============ 3 · Pruébalo ============ -->
+<section id="p-demo" data-page class="page" aria-labelledby="t3">
+  <h1 id="t3" tabindex="-1">Pruébalo</h1>
+  <p class="lead">Eres el personal de citas del HUC. Elige una hora para Antonio.</p>
+
+  <div class="demo">
+    <section class="card agenda" aria-labelledby="h-agenda">
+      <h2 id="h-agenda"><span class="step" aria-hidden="true">1</span>El hospital cita</h2>
+      <p class="mt2">Paciente de ejemplo: Antonio G., de Los Llanos de Aridane (La Palma). Viene con 1 acompañante.</p>
+      <p class="small muted mt1">Agenda del Hospital Universitario de Canarias (HUC), martes 17/11/2026. El Hierro y La Gomera: próximamente.</p>
+      <div class="modes" role="group" aria-label="Modo de agenda">
+        <button type="button" id="mode-hoy" aria-pressed="false">Agenda de hoy</button>
+        <button type="button" id="mode-cv" aria-pressed="true">Con Cita con vuelta</button>
+      </div>
+      <p class="key" id="key" aria-hidden="true"></p>
+      <div class="slots" role="group" aria-label="Horas libres del martes 17/11/2026">
+        <h3 class="col-h" id="h-am">Mañana</h3><ul id="slots-am" aria-labelledby="h-am"></ul>
+        <h3 class="col-h" id="h-pm">Tarde</h3><ul id="slots-pm" aria-labelledby="h-pm"></ul>
+      </div>
+      <p class="why" id="why" aria-live="polite"></p>
+    </section>
+
+    <div class="demo-side">
+      <section aria-labelledby="h-sms">
+        <h2 id="h-sms"><span class="step" aria-hidden="true">2</span>El paciente recibe el plan</h2>
+        <p class="small muted mt1">Así lo ve Antonio en su móvil.</p>
+        <div class="sms mt3" id="sms-card">
+          <p class="sms-head"><span>SMS de citas del hospital</span><span class="num">09:41</span></p>
+          <div class="sms-body" id="sms" aria-live="polite"><p class="muted">Elige una hora en la agenda.</p></div>
+        </div>
+      </section>
+      <section class="mt4" aria-labelledby="h-orden">
+        <h2 id="h-orden"><span class="step" aria-hidden="true">3</span>Un clic en «Confirmar»</h2>
+        <div id="order" class="mt3"><p class="muted">Aparece cuando el paciente pulsa «Confirmar».</p></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="card blk" aria-labelledby="h-medida">
+    <h2 id="h-medida"><span class="step" aria-hidden="true">4</span>Se mide</h2>
+    <div class="figs">
+      <div><p class="fig-k">Noches evitadas</p><p class="fig-v" id="n" aria-live="polite">0</p></div>
+      <div><p class="fig-k">Ahorro para el SCS</p><p class="fig-v ok" id="eur" aria-live="polite">0,00 €</p></div>
+    </div>
+    <p class="payback">Con 52 noches evitadas se paga un piloto de 15.000 €. <b id="left" aria-live="polite">Faltan 52.</b></p>
+    <p class="small muted mt2">Por noche evitada: 2 personas × (106,94 € alojamiento + 39,00 € manutención) = 291,88 €. Cada confirmación en esta página suma una noche.</p>
+  </section>
+
+  <details>
+    <summary><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg>Supuestos del cálculo</summary>
+    <div class="det-body">
+      <ul>
+        <li>Desde el aterrizaje hasta la consulta: 2 h (salida del avión, guagua 020 y tranvía al HUC, margen).</li>
+        <li>Duración de la cita: hasta 2 h. Después, 45 min de traslado al aeropuerto y 45 min de antelación al vuelo, más 30 min de margen.</li>
+        <li>Vuelta como tarde en el vuelo de las 20:00, para llegar a casa a una hora razonable.</li>
+        <li>Ventana resultante La Palma → HUC: citas de 9:30 a 16:00.</li>
+      </ul>
+    </div>
+  </details>
+
+  <nav class="pager" aria-label="Pasos">
+    <a class="pg-prev" href="#propuesta" rel="prev"><svg class="ic flip" aria-hidden="true"><use href="#i-arrow"/></svg>Anterior: Qué propongo construir</a>
+    <a class="pg-home" href="#problema">Volver al inicio</a>
+  </nav>
+</section>
+
+<footer class="foot">
+  <p>Fuentes: horarios Binter SPC–TFN del 17/11/2026 (<a href="https://www.bintercanarias.com/es/vuelos-baratos/spc/tfn/2026-11-17/2026-11-17" target="_blank" rel="noopener">bintercanarias.com</a>); compensaciones del SCS desde el 01/01/2026, Orden de 2 de julio de 2026, BOC n.º 140 (<a href="https://www3.gobiernodecanarias.org/sanidad/scs/contenidoGenerico.jsp?idDocument=69bab29c-3a3e-11de-ac1c-2ff2cc426c4d&amp;idCarpeta=ae273cd1-b385-11e9-82f7-8d5cff9227e6" target="_blank" rel="noopener">gobiernodecanarias.org</a>); pacientes y traslados 2023, Secretaría General del SCS vía Atlántico Hoy (<a href="https://www.atlanticohoy.com/sociedad/pacientes-islas-capitalinas-canarias_1537160_102.html" target="_blank" rel="noopener">atlanticohoy.com</a>); contrato menor, Ley 9/2017 (<a href="https://www.boe.es/buscar/act.php?id=BOE-A-2017-12902" target="_blank" rel="noopener">boe.es</a>).</p>
+  <p>Prototipo de demostración. No está conectado a ningún sistema del SCS, de Binter ni de ninguna agencia.</p>
+</footer>
+</main>
+</div>
+
+<script>
+(() => {
+  document.documentElement.lang = "es";
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+
+  // Router: #problema, #propuesta, #demo (alias antiguos #idea, #prueba).
+  // Las secciones llevan id "p-…" para que el navegador no salte al fragmento al cargar.
+  const ALIAS = { idea: "problema", prueba: "demo" };
+  const pages = [...document.querySelectorAll("[data-page]")];
+  function route(moveFocus) {
+    let id = decodeURIComponent(location.hash.slice(1));
+    id = ALIAS[id] || id;
+    if (!pages.some(p => p.id === "p-" + id)) id = "problema";
+    pages.forEach(p => { p.hidden = p.id !== "p-" + id; });
+    document.querySelectorAll(".site-nav a").forEach(a => {
+      if (a.getAttribute("href") === "#" + id) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+    window.scrollTo(0, 0);
+    if (moveFocus) document.querySelector("#p-" + id + " h1").focus({ preventScroll: true });
+  }
+  window.addEventListener("hashchange", () => route(true));
+  route(false);
+
+  // Binter, martes 17/11/2026, vuelos directos.
+  const IDA = [{ n: "NT603", dep: "07:00", arr: "07:30" }, { n: "NT605", dep: "08:00", arr: "08:30" }];
+  const VUELTA = [
+    { n: "NT650", dep: "15:00", arr: "15:30" }, { n: "NT680", dep: "19:00", arr: "19:30" },
+    { n: "NT688", dep: "20:00", arr: "20:30" }, { n: "NT686", dep: "21:00", arr: "21:30" },
+    { n: "NT678", dep: "22:15", arr: "22:45" },
+  ];
+  const TO_CITA = 120, AFTER = 120 + 45 + 45 + 30, LAST_RETURN = "20:00";
+  const NIGHT = 2 * (106.94 + 39.00);
+  const PILOT_NIGHTS = Math.ceil(15000 / NIGHT);
+  const min = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+  const hhmm = x => String(Math.floor(x / 60)).padStart(2, "0") + ":" + String(x % 60).padStart(2, "0");
+  const eur = v => v.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
+
+  function plan(cita) {
+    const c = min(cita);
+    const ida = [...IDA].reverse().find(f => min(f.arr) + TO_CITA <= c);
+    const vuelta = VUELTA.find(f => min(f.dep) >= c + AFTER && min(f.dep) <= min(LAST_RETURN));
+    return { ida, vuelta };
+  }
+  function reason(cita, p) {
+    if (!p.ida) return `El primer vuelo aterriza a las ${IDA[0].arr}: no da tiempo a llegar a las ${cita}. Hay que volar la víspera y dormir en Tenerife.`;
+    if (!p.vuelta) return `Tras una cita a las ${cita} no queda vuelo de vuelta hasta las ${LAST_RETURN}. Hay que dormir en Tenerife.`;
+    return `Ida ${p.ida.n} ${p.ida.dep}, vuelta ${p.vuelta.n} ${p.vuelta.dep}. Antonio y su acompañante vuelven a casa el mismo día.`;
+  }
+
+  const TIMES = []; for (let t = min("08:00"); t <= min("17:30"); t += 30) TIMES.push(hhmm(t));
+
+  // Asserts: the window matches the proposal text (9:30–16:00).
+  console.assert(!plan("09:00").ida && plan("09:30").ida.n === "NT603", "inicio ventana");
+  console.assert(plan("10:30").ida.n === "NT605" && plan("10:30").vuelta.n === "NT650", "plan 10:30");
+  console.assert(plan("16:00").vuelta.n === "NT688" && !plan("16:30").vuelta, "fin ventana");
+  console.assert(Math.abs(NIGHT - 291.88) < 1e-9 && PILOT_NIGHTS === 52 && 51 * NIGHT < 15000, "importes");
+  console.assert(Math.abs(2 * 106.94 - 213.88) < 1e-9 && 2 * 39.00 === 78, "importes página 1");
+  console.assert(TIMES.length === 20 && plan("08:00").vuelta.n === "NT650", "agenda y vuelta de hoy");
+
+  const icon = id => `<svg class="ic" aria-hidden="true"><use href="#${id}"/></svg>`;
+  const el = id => document.getElementById(id);
+  const ORDER_EMPTY = `<p class="muted">Aparece cuando el paciente pulsa «Confirmar».</p>`;
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+  const narrow = window.matchMedia("(max-width: 959px)");
+  let mode = "cv", selected = null, nights = 0;
+  const confirmed = new Set();
+
+  function renderSlots() {
+    const am = el("slots-am"), pm = el("slots-pm");
+    am.textContent = ""; pm.textContent = "";
+    el("key").innerHTML = mode === "hoy"
+      ? `<span>Hoy todas las horas libres parecen iguales.</span>`
+      : `<span><span class="dot ok"></span>Vuelve el mismo día</span><span><span class="dot off"></span>Obliga a dormir fuera</span>`;
+    TIMES.forEach(t => {
+      const p = plan(t), ok = !!(p.ida && p.vuelta), off = mode === "cv" && !ok;
+      const li = document.createElement("li"), b = document.createElement("button");
+      b.type = "button"; b.dataset.t = t;
+      b.className = "slot " + (mode === "hoy" ? "is-free" : ok ? "is-ok" : "is-off");
+      if (off) b.setAttribute("aria-disabled", "true");
+      else b.setAttribute("aria-pressed", String(selected === t));
+      const state = mode === "hoy" ? "libre" : ok ? "vuelve el mismo día" : p.ida ? "sin vuelo de vuelta" : "sin vuelo de ida a tiempo";
+      b.setAttribute("aria-label", `${t}, ${state}`);
+      b.innerHTML = `<span class="dot" aria-hidden="true"></span><span class="slot-t">${t}</span>`;
+      // Red rows select nothing; the reason goes to the status line (replaces the old hover tooltip).
+      b.addEventListener("click", () => { if (off) el("why").textContent = reason(t, p); else choose(t, true); });
+      li.appendChild(b);
+      (min(t) < min("13:00") ? am : pm).appendChild(li);
+    });
+    if (!selected) el("why").textContent = mode === "hoy"
+      ? "Hoy la agenda no sabe de qué isla viene el paciente: todas las horas parecen iguales. Prueba las 8:00."
+      : "Solo se pueden elegir las horas con punto verde. Pulsa una hora tachada para ver por qué no sirve.";
+  }
+
+  function choose(t, byUser) {
+    selected = t;
+    document.querySelectorAll(".slot[aria-pressed]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.t === t)));
+    const p = plan(t), ok = !!(p.ida && p.vuelta);
+    el("order").innerHTML = ORDER_EMPTY;
+    if (mode === "hoy" && !ok) {
+      el("why").textContent = `Agenda de hoy: cita a las ${t}. ${reason(t, p)} Coste para el SCS: ${eur(NIGHT)} por una noche de dos personas.`;
+      el("sms").innerHTML = `<div class="bubble"><p>Antonio, su cita en el HUC: martes 17/11 a las <b class="num">${t}</b>.</p><p>Pida su bono de traslado y reserve el viaje en su agencia.</p></div>`;
+      el("order").innerHTML = `<p class="muted">Hoy no hay orden automática: el paciente pide el bono por su cuenta y llama a la agencia.</p>`;
+    } else {
+      el("why").textContent = (mode === "hoy" ? "Agenda de hoy, pero esta hora sí permite volver. " : "") + reason(t, p);
+      el("sms").innerHTML = `
+        <div class="bubble">
+          <p>Antonio, su cita en el HUC: martes 17/11 a las <b class="num">${t}</b>. Su plan del día:</p>
+          <ol class="pl">
+            <li><div class="pl-row"><b class="num">${p.ida.dep}</b>${icon("i-plane")}<span>Vuelo ${p.ida.n} La Palma → Tenerife Norte (llega ${p.ida.arr})</span></div><p class="pl-sub mt1">Guagua 020 y tranvía hasta el HUC</p></li>
+            <li class="pl-row"><b class="num">${t}</b>${icon("i-hosp")}<span>Cita</span></li>
+            <li class="pl-row"><b class="num">${p.vuelta.dep}</b>${icon("i-plane")}<span>Vuelo ${p.vuelta.n} Tenerife Norte → La Palma (llega ${p.vuelta.arr})</span></li>
+          </ol>
+          <p>Viaja con 1 acompañante. Esa noche duerme en casa.</p>
+        </div>
+        <div class="sms-actions" id="sms-actions">
+          <button class="btn" type="button" id="confirm">Confirmar</button>
+          <button class="linkbtn" type="button" id="change">Pedir cambio</button>
+        </div>`;
+      el("confirm").addEventListener("click", () => confirmar(t, p));
+      el("change").addEventListener("click", () => { el("why").textContent = "El paciente pide otra hora: la agenda vuelve a ofrecer solo horas con vuelta en el día."; });
+    }
+    if (byUser && narrow.matches) el("sms-card").scrollIntoView({ block: "start", behavior: reduce.matches ? "auto" : "smooth" });
+  }
+
+  const conn = (f, from, to) => `<div>
+    <div class="conn-top"><span class="chip">${f.n}</span><span>${from} → ${to}</span></div>
+    <div class="conn-line"><span class="sr">Sale</span><b>${f.dep}</b><span class="conn-rail" aria-hidden="true"></span><span class="sr">llega</span><b>${f.arr}</b></div></div>`;
+
+  function confirmar(t, p) {
+    const ref = `SIM-${t.replace(":", "")}-17112026`;
+    el("sms-actions").outerHTML = `<p class="done">${icon("i-check")}Confirmado</p>`;
+    el("order").innerHTML = `
+      <article class="order" aria-labelledby="order-h">
+        <div class="order-head"><h3 id="order-h" tabindex="-1">Orden de reserva</h3><span class="tag tag-neutral">Simulación</span></div>
+        <p class="ref">${ref}</p>
+        <p class="small muted">Para la agencia que eligió el paciente.</p>
+        <div class="conns">${conn(p.ida, "La Palma", "Tenerife Norte")}${conn(p.vuelta, "Tenerife Norte", "La Palma")}</div>
+        <dl class="kv mt2">
+          <div><dt>Pasajeros</dt><dd>2: paciente y acompañante</dd></div>
+          <div><dt>Datos clínicos</dt><dd>Ninguno</dd></div>
+          <div><dt>Descuento residente</dt><dd>La agencia lo verifica de forma automática al emitir (sistema SARA)</dd></div>
+        </dl>
+        <details>
+          <summary>${icon("i-arrow")}Qué se envía y a quién</summary>
+          <dl class="kv">
+            <div><dt>Bono de traslado</dt><dd>Pedido automáticamente con la referencia del bono</dd></div>
+            <div><dt>Agencia</dt><dd>La que eligió el paciente (libre concurrencia)</dd></div>
+            <div><dt>Datos enviados</dt><dd>Nombre, DNI, municipio, trayecto y fecha</dd></div>
+            <div><dt>Si algo cambia</dt><dd>La agencia cambia el billete; el paciente no hace nada</dd></div>
+          </dl>
+        </details>
+      </article>`;
+    el("order-h").focus();
+    if (!confirmed.has(t + mode)) { confirmed.add(t + mode); nights += 1; }
+    renderStats();
+  }
+
+  function renderStats() {
+    el("n").textContent = String(nights);
+    el("eur").textContent = eur(nights * NIGHT);
+    const left = Math.max(0, PILOT_NIGHTS - nights);
+    el("left").textContent = left ? `Faltan ${left}.` : "Ya está cubierto.";
+  }
+
+  function setMode(m) {
+    mode = m; selected = null;
+    el("mode-hoy").setAttribute("aria-pressed", String(m === "hoy"));
+    el("mode-cv").setAttribute("aria-pressed", String(m === "cv"));
+    el("sms").innerHTML = `<p class="muted">Elige una hora en la agenda.</p>`;
+    el("order").innerHTML = ORDER_EMPTY;
+    renderSlots();
+  }
+  el("mode-hoy").addEventListener("click", () => setMode("hoy"));
+  el("mode-cv").addEventListener("click", () => setMode("cv"));
+
+  renderSlots(); renderStats(); choose("10:30", false);
+})();
+</script>
+
+</body>
+</html>
