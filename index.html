@@ -511,7 +511,7 @@ details[open] > summary .ic { transform: rotate(90deg); }
 
   <section class="pilot" aria-labelledby="h-pilot">
     <h2 id="h-pilot">Primer paso: un piloto La Palma → HUC</h2>
-    <p>Tres meses y menos de 15.000 €. Con 52 noches evitadas, el piloto se paga solo.</p>
+    <p>Tres meses para medir con datos reales cuántas noches se evitan y cuánto ahorra el SCS.</p>
   </section>
 
   <section class="blk" aria-labelledby="h-puerta">
@@ -581,7 +581,7 @@ details[open] > summary .ic { transform: rotate(90deg); }
       <div><p class="fig-k">Noches evitadas</p><p class="fig-v" id="n" aria-live="polite">0</p></div>
       <div><p class="fig-k">Ahorro para el SCS</p><p class="fig-v ok" id="eur" aria-live="polite">0,00 €</p></div>
     </div>
-    <p class="payback">Con 52 noches evitadas se paga un piloto de 15.000 €. <b id="left" aria-live="polite">Faltan 52.</b></p>
+    <p class="payback">Cada noche evitada es dinero que el SCS no gasta y una noche más en casa.</p>
     <p class="small muted mt2">Por noche evitada: 2 personas × (106,94 € alojamiento + 39,00 € manutención) = 291,88 €. Cada confirmación en esta página suma una noche.</p>
   </section>
 
@@ -643,7 +643,6 @@ details[open] > summary .ic { transform: rotate(90deg); }
   ];
   const TO_CITA = 120, AFTER = 120 + 45 + 45 + 30, LAST_RETURN = "20:00";
   const NIGHT = 2 * (106.94 + 39.00);
-  const PILOT_NIGHTS = Math.ceil(15000 / NIGHT);
   const min = t => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
   const hhmm = x => String(Math.floor(x / 60)).padStart(2, "0") + ":" + String(x % 60).padStart(2, "0");
   const eur = v => v.toLocaleString("es-ES", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " €";
@@ -666,7 +665,7 @@ details[open] > summary .ic { transform: rotate(90deg); }
   console.assert(!plan("09:00").ida && plan("09:30").ida.n === "NT603", "inicio ventana");
   console.assert(plan("10:30").ida.n === "NT605" && plan("10:30").vuelta.n === "NT650", "plan 10:30");
   console.assert(plan("16:00").vuelta.n === "NT688" && !plan("16:30").vuelta, "fin ventana");
-  console.assert(Math.abs(NIGHT - 291.88) < 1e-9 && PILOT_NIGHTS === 52 && 51 * NIGHT < 15000, "importes");
+  console.assert(Math.abs(NIGHT - 291.88) < 1e-9, "importes");
   console.assert(Math.abs(2 * 106.94 - 213.88) < 1e-9 && 2 * 39.00 === 78, "importes página 1");
   console.assert(TIMES.length === 20 && plan("08:00").vuelta.n === "NT650", "agenda y vuelta de hoy");
 
@@ -771,8 +770,6 @@ details[open] > summary .ic { transform: rotate(90deg); }
   function renderStats() {
     el("n").textContent = String(nights);
     el("eur").textContent = eur(nights * NIGHT);
-    const left = Math.max(0, PILOT_NIGHTS - nights);
-    el("left").textContent = left ? `Faltan ${left}.` : "Ya está cubierto.";
   }
 
   function setMode(m) {
