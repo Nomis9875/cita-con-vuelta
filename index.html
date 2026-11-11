@@ -391,8 +391,8 @@ details[open] > summary .ic { transform: rotate(90deg); }
           </ol>
           <div class="tl-cost">
             <p class="k">Coste para el SCS</p>
-            <p class="sum no">291,88 €</p>
-            <p class="small muted">1 noche y 2 días fuera de casa</p>
+            <p class="sum no">hasta 291,88 €</p>
+            <p class="small muted">1 noche fuera de casa, paciente y acompañante autorizado</p>
           </div>
         </div>
       </div>
@@ -440,8 +440,8 @@ details[open] > summary .ic { transform: rotate(90deg); }
         <li><span class="sw night"></span>Noche fuera de casa</li>
       </ul>
       <div class="result">
-        <p class="result-big">Una noche menos y <span class="num">291,88 €</span> menos por viaje.</p>
-        <p class="small muted mt2">Los billetes de avión cuestan lo mismo en los dos casos y no se incluyen.</p>
+        <p class="result-big">Una noche menos y hasta <span class="num">145,94 €</span> menos por persona.</p>
+        <p class="small muted mt2">Antonio viaja con un acompañante autorizado: hasta 291,88 €. Los billetes de avión los paga el SCS en los dos casos y no se incluyen.</p>
       </div>
     </div>
   </section>
@@ -456,9 +456,9 @@ details[open] > summary .ic { transform: rotate(90deg); }
     <details>
       <summary><svg class="ic" aria-hidden="true"><use href="#i-arrow"/></svg>Cómo se calculan los importes</summary>
       <div class="det-body">
-        <p>El SCS compensa a paciente y acompañante, por persona y día, con 106,94 € de alojamiento y 39,00 € de manutención (compensaciones desde el 01/01/2026, Orden de 2 de julio de 2026, BOC n.º 140, <a href="https://www3.gobiernodecanarias.org/sanidad/scs/contenidoGenerico.jsp?idDocument=69bab29c-3a3e-11de-ac1c-2ff2cc426c4d&amp;idCarpeta=ae273cd1-b385-11e9-82f7-8d5cff9227e6" target="_blank" rel="noopener">gobiernodecanarias.org</a>).</p>
-        <p>Una noche fuera para dos personas: 2 × 106,94 € = <span class="num">213,88 €</span> de alojamiento y 2 × 39,00 € = <span class="num">78,00 €</span> de manutención. En total <span class="num">291,88 €</span>.</p>
-        <p>Si vuelve el mismo día, el cálculo supone que no hay alojamiento ni manutención.</p>
+        <p>Solo cuando hay que pernoctar, el SCS compensa al paciente, y al acompañante si lo autoriza (menores de edad o personas que necesitan ayuda), con un máximo por persona y día de 106,94 € de alojamiento y 39,00 € de manutención, contra factura (compensaciones desde el 01/01/2026, Orden de 2 de julio de 2026, BOC n.º 140, <a href="https://www3.gobiernodecanarias.org/sanidad/scs/contenidoGenerico.jsp?idDocument=69bab29c-3a3e-11de-ac1c-2ff2cc426c4d&amp;idCarpeta=ae273cd1-b385-11e9-82f7-8d5cff9227e6" target="_blank" rel="noopener">gobiernodecanarias.org</a>).</p>
+        <p>Por persona y noche evitada: hasta 106,94 € + 39,00 € = <span class="num">145,94 €</span>. Antonio y su acompañante: hasta <span class="num">291,88 €</span>.</p>
+        <p>Si vuelve el mismo día no hay alojamiento ni manutención (Decreto 173/2009, art. 8.1). Los billetes se pagan igual.</p>
       </div>
     </details>
   </section>
@@ -582,7 +582,7 @@ details[open] > summary .ic { transform: rotate(90deg); }
       <div><p class="fig-k">Ahorro para el SCS</p><p class="fig-v ok" id="eur" aria-live="polite">0,00 €</p></div>
     </div>
     <p class="payback">Cada noche evitada es dinero que el SCS no gasta y una noche más en casa.</p>
-    <p class="small muted mt2">Por noche evitada: 2 personas × (106,94 € alojamiento + 39,00 € manutención) = 291,88 €. Cada confirmación en esta página suma una noche.</p>
+    <p class="small muted mt2">Por noche evitada: hasta 145,94 € por persona (106,94 € alojamiento + 39,00 € manutención). Antonio viaja con acompañante autorizado: hasta 291,88 €. Cada confirmación en esta página suma una noche.</p>
   </section>
 
   <details>
@@ -709,7 +709,7 @@ details[open] > summary .ic { transform: rotate(90deg); }
     const p = plan(t), ok = !!(p.ida && p.vuelta);
     el("order").innerHTML = ORDER_EMPTY;
     if (mode === "hoy" && !ok) {
-      el("why").textContent = `Agenda de hoy: cita a las ${t}. ${reason(t, p)} Coste para el SCS: ${eur(NIGHT)} por una noche de dos personas.`;
+      el("why").textContent = `Agenda de hoy: cita a las ${t}. ${reason(t, p)} Coste para el SCS: hasta ${eur(NIGHT)} por una noche de Antonio y su acompañante.`;
       el("sms").innerHTML = `<div class="bubble"><p>Antonio, su cita en el HUC: martes 17/11 a las <b class="num">${t}</b>.</p><p>Pida su bono de traslado y reserve el viaje en su agencia.</p></div>`;
       el("order").innerHTML = `<p class="muted">Hoy no hay orden automática: el paciente pide el bono por su cuenta y llama a la agencia.</p>`;
     } else {
